@@ -23,6 +23,25 @@
   const wxKind = c => !c ? null : /rain|thunder|storm|sleet/.test(c) ? 'rain' : /partly/.test(c) ? 'partly' : /cloud|fog|wind/.test(c) ? 'cloud' : /night/.test(c) ? 'moon' : 'sun';
   const WX_NAME = { sun: 'Sunny', moon: 'Clear night', partly: 'Partly cloudy', cloud: 'Cloudy', rain: 'Rain' };
   const svgIcon = (body, extra = '') => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" ${extra}>${body}</svg>`;
+  // Small hand-drawn flags (3:2), drawn as SVG so they look the same on every device.
+  const star = (cx, cy, R, r, n = 5, rot = -90) => Array.from({ length: n * 2 }, (_, i) => {
+    const a = (rot + (i * 180) / n) * Math.PI / 180, d = i % 2 ? r : R;
+    return `${(cx + d * Math.cos(a)).toFixed(2)},${(cy + d * Math.sin(a)).toFixed(2)}`;
+  }).join(' ');
+  const FLAG_BODY = {
+    IN: '<rect width="30" height="20" fill="#fff"/><rect width="30" height="6.67" fill="#FF9933"/><rect y="13.33" width="30" height="6.67" fill="#138808"/><circle cx="15" cy="10" r="2.6" fill="none" stroke="#000080" stroke-width=".45"/><circle cx="15" cy="10" r=".5" fill="#000080"/>' +
+      Array.from({ length: 24 }, (_, i) => { const a = i * Math.PI / 12; return `<line x1="15" y1="10" x2="${(15 + 2.5 * Math.cos(a)).toFixed(2)}" y2="${(10 + 2.5 * Math.sin(a)).toFixed(2)}" stroke="#000080" stroke-width=".18"/>`; }).join(''),
+    ID: '<rect width="30" height="10" fill="#CE1126"/><rect y="10" width="30" height="10" fill="#fff"/>',
+    SG: '<rect width="30" height="10" fill="#EF3340"/><rect y="10" width="30" height="10" fill="#fff"/><circle cx="6.4" cy="5" r="3.3" fill="#fff"/><circle cx="7.7" cy="5" r="3.1" fill="#EF3340"/>' +
+      [0, 1, 2, 3, 4].map(i => { const a = (-90 + i * 72) * Math.PI / 180; return `<polygon points="${star(9.7 + 1.55 * Math.cos(a), 5 + 1.55 * Math.sin(a), .6, .24)}" fill="#fff"/>`; }).join(''),
+    MY: Array.from({ length: 14 }, (_, i) => `<rect y="${(i * 20 / 14).toFixed(3)}" width="30" height="${(20 / 14 + .02).toFixed(3)}" fill="${i % 2 ? '#fff' : '#CC0001'}"/>`).join('') +
+      '<rect width="15" height="11.43" fill="#010066"/><circle cx="5.6" cy="5.7" r="3.9" fill="#FC0"/><circle cx="6.7" cy="5.7" r="3.3" fill="#010066"/>' + `<polygon points="${star(10.9, 5.7, 2.7, 1.15, 14)}" fill="#FC0"/>`,
+    TH: '<rect width="30" height="20" fill="#A51931"/><rect y="3.33" width="30" height="13.33" fill="#F4F5F8"/><rect y="6.67" width="30" height="6.67" fill="#2D2A4A"/>',
+    KH: '<rect width="30" height="20" fill="#032EA1"/><rect y="5" width="30" height="10" fill="#E00025"/><path fill="#fff" d="M9.5 13.6h11v-.9h-1v-1.7h-.9V9.4l-.6-1.2-.6 1.2v1.6h-.7V8.6l-.7-1.6-.7 1.6V11h-.7V8.4L15 6.2l-.7 2.2V11h-.7V8.6l-.7-1.6-.7 1.6V11h-.7V9.4l-.6-1.2-.6 1.2v1.6h-.9v1.7h-1z"/>',
+    VN: `<rect width="30" height="20" fill="#DA251D"/><polygon points="${star(15, 10.4, 6, 2.4)}" fill="#FF0"/>`,
+    LA: '<rect width="30" height="20" fill="#CE1126"/><rect y="5" width="30" height="10" fill="#002868"/><circle cx="15" cy="10" r="4" fill="#fff"/>',
+  };
+  const flag = (code, title) => FLAG_BODY[code] ? `<svg class="flag" viewBox="0 0 30 20" role="img" aria-label="${title || code}"><title>${title || code}</title>${FLAG_BODY[code]}</svg>` : '';
   const $ = s => document.querySelector(s);
   const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   const css = name => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
@@ -54,6 +73,7 @@
     renderThemes();
     renderMemories();
     renderStays();
+    renderFood();
     renderChapters();
     wireButtons();
     wireTabs();
@@ -111,6 +131,8 @@
     const photos = S.reduce((a, s) => a + s.photos.length, 0), videos = S.reduce((a, s) => a + s.videos.length, 0);
     const days = Math.round((T.end - T.start) / 86400);
     const stats = [[days, 'days'], [Object.keys(T.countryDays).length, 'countries'], [S.length, 'stops'], [fmtKm(T.totalKm), 'km travelled'], [photos, 'photos'], [videos, 'videos']];
+    const order = []; S.forEach(s => { if (!order.includes(s.country)) order.push(s.country); });
+    $('#flagRow').innerHTML = order.map(c => `<a href="#c-${c}" title="${T.countries[c]}">${flag(c, T.countries[c])}</a>`).join('');
     $('#stats').innerHTML = stats.map(([v, l]) => `<div><b>${v}</b><span>${l}</span></div>`).join('');
     // "On this day": a stop that started on today's day and month.
     const now = new Date();
@@ -264,7 +286,7 @@
     const cc = $('#countryChips');
     let activeCountry = null;
     cc.innerHTML = `<button class="chip" type="button" data-c="" aria-pressed="true">All</button>` + Object.entries(T.countries).map(([c, n]) =>
-      `<button class="chip" type="button" data-c="${c}" aria-pressed="false"><span class="dot" style="background:var(--c-${c})"></span>${n}</button>`).join('');
+      `<button class="chip" type="button" data-c="${c}" aria-pressed="false">${flag(c, n)}${n}</button>`).join('');
     cc.addEventListener('click', e => {
       const b = e.target.closest('button'); if (!b) return;
       activeCountry = b.dataset.c || null;
@@ -404,7 +426,7 @@
       const all = S.filter(s => s.country === r.code);
       const days = Math.round(T.countryDays[r.code]);
       const i = seen.length - 1;
-      return `<a class="stamp" href="#c-${r.code}" style="--c:var(--c-${r.code});--r:${rot[i % rot.length]}deg"><div><span>${fmtDate(r.steps[0].t, r.steps[0].tz)} 2025</span><b>${esc(T.countries[r.code])}</b><span>${days || '<1'} day${days === 1 ? '' : 's'} · ${all.length} stop${all.length > 1 ? 's' : ''}</span></div></a>`;
+      return `<a class="stamp" href="#c-${r.code}" style="--c:var(--c-${r.code});--r:${rot[i % rot.length]}deg"><div>${flag(r.code, T.countries[r.code])}<span>${fmtDate(r.steps[0].t, r.steps[0].tz)} 2025</span><b>${esc(T.countries[r.code])}</b><span>${days || '<1'} day${days === 1 ? '' : 's'} · ${all.length} stop${all.length > 1 ? 's' : ''}</span></div></a>`;
     }).join('');
   }
 
@@ -557,7 +579,7 @@
   }
 
   function renderMemories() {
-    const svg = d3.select('#memChart'), W = 520, m = { l: 92, r: 70, t: 8, b: 20 }, rowH = 32;
+    const svg = d3.select("#memChart"), W = 520, m = { l: 118, r: 70, t: 8, b: 20 }, rowH = 32;
     const codes = Object.keys(T.countries).filter(c => S.some(s => s.country === c));
     const rows = codes.map(c => ({ c, p: d3.sum(S.filter(s => s.country === c), s => s.photos.length), v: d3.sum(S.filter(s => s.country === c), s => s.videos.length) }));
     const H = m.t + rows.length * rowH + m.b; svg.attr('viewBox', `0 0 ${W} ${H}`);
@@ -566,7 +588,8 @@
     rows.forEach((r, i) => {
       const y = m.t + i * rowH;
       const row = g.append('a').attr('href', `#c-${r.c}`);
-      row.append('text').attr('class', 'lbl').attr('x', m.l - 10).attr('y', y + 18).attr('text-anchor', 'end').text(T.countries[r.c]);
+      row.append('text').attr('class', 'lbl').attr('x', m.l - 32).attr('y', y + 18).attr('text-anchor', 'end').text(T.countries[r.c]);
+      row.append('svg').attr('x', m.l - 27).attr('y', y + 8).attr('width', 21).attr('height', 14).attr('viewBox', '0 0 30 20').html(FLAG_BODY[r.c]);
       row.append('rect').attr('x', m.l).attr('y', y + 6).attr('width', x(r.p) - m.l).attr('height', 18).attr('rx', 3).attr('fill', `var(--c-${r.c})`);
       row.append('rect').attr('x', x(r.p) + 1).attr('y', y + 6).attr('width', Math.max(0, x(r.p + r.v) - x(r.p) - 1)).attr('height', 18).attr('rx', 3).attr('fill', `var(--c-${r.c})`).attr('fill-opacity', .4);
       row.append('text').attr('x', x(r.p + r.v) + 8).attr('y', y + 19).text(`${r.p} + ${r.v}▶`);
@@ -587,6 +610,66 @@
       row.append('rect').attr('x', m.l).attr('y', y + 5).attr('width', x(s.nights) - m.l).attr('height', 17).attr('rx', 3).attr('fill', `var(--c-${s.country})`);
       row.append('text').attr('x', x(s.nights) + 8).attr('y', y + 18).text(`${s.nights} nights`);
     });
+  }
+
+  /* ---------------- food and drink (overview tab) ---------------- */
+  const VERDICT = { loved: ['♥', 'Loved it'], okay: ['≈', 'It was okay'], nope: ['✕', "Didn't work"] };
+  function renderFood() {
+    const F = T.food; if (!F) return;
+    const st = n => S[n - 1];
+    const stopLabel = n => `${n} · ${esc(st(n).title)}`;
+    const nightMarkets = S.reduce((a, s) => a + (s.story.match(/night market/gi) || []).length, 0);
+    const repeats = F.places.filter(p => /again|thrice|every ?day|all our meals/i.test(p.quote)).length + 2; // + Warung Local and Sweet Orange, each visited twice
+    const tiles = [
+      ['Places named', F.places.length, 'warungs, hawker centres, cafes and bars'],
+      ['Loved', F.places.filter(p => p.verdict === 'loved').length, 'places you would send a friend to'],
+      ['Not for us', F.places.filter(p => p.verdict !== 'loved').length, 'from "average" to "No Indians allowed"'],
+      ['Night markets', nightMarkets, 'mentions across the stories'],
+      ['Indian food fixes', F.home.length, 'times the craving won'],
+      ['Went back again', repeats, 'places good enough to repeat'],
+    ];
+    $('#foodStats').innerHTML = tiles.map(([k, b, v]) => `<div class="record"><span class="k">${k}</span><b>${b}</b><span class="v">${v}</span></div>`).join('');
+
+    const tag = x => `<a class="ftag ${x.verdict}" href="#s-${x.n}" title="${VERDICT[x.verdict][1]} · ${esc(st(x.n).title)}"><i>${VERDICT[x.verdict][0]}</i>${esc(x.name)}</a>`;
+    const order = []; S.forEach(s => { if (s.country !== 'IN' && !order.includes(s.country)) order.push(s.country); });
+    $('#tasteGrid').innerHTML = order.map(c => {
+      const inC = x => st(x.n).country === c;
+      const dishes = F.dishes.filter(inC), drinks = F.drinks.filter(inC), places = F.places.filter(inC);
+      const fav = places.find(p => p.verdict === 'loved');
+      return `<article class="taste"><header>${flag(c, T.countries[c])}<b>${esc(T.countries[c])}</b><span>${places.length} place${places.length === 1 ? '' : 's'}</span></header>
+        ${dishes.length ? `<div class="tags">${dishes.map(tag).join('')}</div>` : ''}
+        ${drinks.length ? `<div class="tags">${drinks.map(tag).join('')}</div>` : ''}
+        ${fav ? `<div class="pick">Favourite: <a href="#s-${fav.n}" style="color:inherit">${esc(fav.name)}</a>, ${esc(fav.what.toLowerCase())}</div>` : ''}</article>`;
+    }).join('');
+
+    $('#verdicts').innerHTML = ['loved', 'okay', 'nope'].map(v => {
+      const ps = F.places.filter(p => p.verdict === v);
+      return `<div class="vcol ${v}"><h4><span class="n">${ps.length}</span>${VERDICT[v][0]} ${VERDICT[v][1]}</h4><div class="vlist">${ps.map(p =>
+        `<a class="fplace" href="#s-${p.n}"><span class="pn">${flag(st(p.n).country, T.countries[st(p.n).country])}${esc(p.name)}</span><span class="pw">${stopLabel(p.n)} · ${esc(p.what)}</span><q>${esc(p.quote)}</q></a>`).join('')}</div></div>`;
+    }).join('');
+
+    // Missing home: Indian food moments on the 106-day line between the two India stops.
+    const svg = d3.select('#homeChart'), W = 640, H = 230, m = { l: 34, r: 34, t: 20, b: 40 };
+    const x = d3.scaleTime().domain([new Date(T.start * 1000), new Date(T.end * 1000)]).range([m.l, W - m.r]);
+    const g = svg.append('g'), base = H - m.b - 26;
+    countryRuns().forEach((r, i, runs) => {
+      const x0 = x(new Date(r.steps[0].t * 1000)), x1 = x(new Date((runs[i + 1] ? runs[i + 1].steps[0].t : T.end) * 1000));
+      g.append('rect').attr('x', x0).attr('y', base).attr('width', Math.max(2, x1 - x0 - 1)).attr('height', 8).attr('rx', 2).attr('fill', `var(--c-${r.code})`);
+      if (r.code !== 'IN' && x1 - x0 > 34) g.append('svg').attr('x', (x0 + x1) / 2 - 9).attr('y', base + 14).attr('width', 18).attr('height', 12).attr('viewBox', '0 0 30 20').html(FLAG_BODY[r.code]);
+    });
+    [[T.start, 'start'], [T.end, 'end']].forEach(([t, a]) => g.append('svg').attr('x', x(new Date(t * 1000)) - (a === 'start' ? 30 : -6)).attr('y', base - 3).attr('width', 21).attr('height', 14).attr('viewBox', '0 0 30 20').html(FLAG_BODY.IN));
+    x.ticks(d3.timeMonth.every(1)).forEach(d => g.append('text').attr('x', x(d)).attr('y', H - 6).style('letter-spacing', '.12em').text(d3.timeFormat('%b')(d).toUpperCase()));
+    F.home.forEach((h, i) => {
+      const s = st(h.n), xx = x(new Date(s.t * 1000)), yy = m.t + 30 + (i % 2) * 46;
+      const a = g.append('a').attr('href', `#s-${h.n}`);
+      a.append('line').attr('x1', xx).attr('x2', xx).attr('y1', yy + 11).attr('y2', base).attr('stroke', 'var(--ink-2)').attr('stroke-dasharray', '2 3');
+      a.append('circle').attr('cx', xx).attr('cy', yy).attr('r', 11).attr('fill', 'var(--c-IN)').attr('stroke', 'var(--paper)').attr('stroke-width', 2);
+      a.append('text').attr('x', xx).attr('y', yy + 4).attr('text-anchor', 'middle').style('fill', '#fff').style('font-weight', 600).text(i + 1);
+      a.append('title').text(`${s.title}: ${h.quote}`);
+    });
+    $('#homeList').innerHTML = F.home.map((h, i) => `<li><a href="#s-${h.n}" style="font-size:12px"><b style="color:var(--c-IN)">${i + 1}</b> · Day ${Math.round((st(h.n).t - T.start) / 86400)} · ${esc(st(h.n).title)} · ${esc(h.what)}</a><q>${esc(h.quote)}</q></li>`).join('');
+
+    $('#drinks').innerHTML = F.drinks.map(d => `<li><a href="#s-${d.n}">${flag(st(d.n).country, T.countries[st(d.n).country])}<b>${esc(d.name)} <span class="mono" style="font-size:12px;color:var(--muted)">${VERDICT[d.verdict][0]}</span></b><span>${esc(d.note)}</span></a></li>`).join('');
   }
 
   /* ---------------- chapters ---------------- */
