@@ -16,3 +16,6 @@ A travel-journal website built from our Polarsteps export of SEA 2025 (2 Feb to 
 - Transport per leg is in `LEGS` in `scripts/build.js`. "story" means it's written in the journal and "estimate" means it was inferred from GPS speed and geography. Edit it there to correct a leg.
 - `src/page.html` is the page as published to the Claude artifact (no doctype). `site/index.html` is generated from it.
 - Map data: Natural Earth via world-atlas, clipped to the region.
+
+## Shareable single file
+`node scripts/single.js` writes `../SEA 2025 Journal.html`, one self-contained file (~40 MB) with the photos, data, styles and d3 inlined. It works offline. Videos show their preview frame only.

@@ -32,7 +32,8 @@
 
   let T, S, LEGS, LEG_BY_TO, mapApi;
 
-  fetch('trip.json').then(r => { if (!r.ok) throw new Error(r.status); return r.json(); }).then(init).catch(err => {
+  // The single-file export embeds the data as window.TRIP_DATA; the site fetches trip.json.
+  (window.TRIP_DATA ? Promise.resolve(window.TRIP_DATA) : fetch('trip.json').then(r => { if (!r.ok) throw new Error(r.status); return r.json(); })).then(init).catch(err => {
     $('#chapters').innerHTML = `<p class="section">The trip data didn't load (${esc(err.message)}). Reload the page to try again.</p>`;
   });
 
@@ -718,9 +719,12 @@
     clearTimeout(lbTimer);
     const it = lbItems[lbIndex], s = it.step;
     const stage = lb.querySelector('#lbStage');
-    stage.innerHTML = it.type === 'video'
+    // The single-file export has no video files (src is null), so it shows the preview frame instead.
+    stage.innerHTML = it.type === 'video' && it.src
       ? `<video src="${it.src}" poster="${it.poster}" controls autoplay playsinline ${lbAuto ? 'muted' : ''}></video>`
-      : `<img class="fade" src="${it.src}" alt="${esc(s.title)}">`;
+      : it.type === 'video'
+        ? `<div style="position:relative;display:grid;place-items:center"><img class="fade" src="${it.poster}" alt="${esc(s.title)}" style="min-width:min(70vw,640px)"><span style="position:absolute;bottom:12px;background:rgb(0 0 0 / .6);color:#fff;padding:6px 12px;border-radius:999px;font:500 12px var(--f-mono)">Video · ${Math.round(it.dur)}s · plays in the online journal</span></div>`
+        : `<img class="fade" src="${it.src}" alt="${esc(s.title)}">`;
     lb.querySelector('#lbT').textContent = `${lbIndex + 1} / ${lbItems.length}`;
     lb.querySelector('#lbCap').innerHTML = `${esc(s.title)}<small>${s.n} · ${esc(s.place)}, ${esc(T.countries[s.country])} · ${fmtDate(s.t, s.tz, { day: 'numeric', month: 'long', year: 'numeric' })}</small>`;
     // Preload the next photo.
