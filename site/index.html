@@ -15,110 +15,154 @@
 <body>
 <header class="topbar">
   <div class="wrap">
-    <a class="brand" href="#top">SEA&nbsp;2025<small>HIKE &amp; SEEK</small></a>
-    <div class="strip" id="strip" aria-hidden="true"></div>
-    <span class="strip-label" id="stripLabel"></span>
-    <nav class="topnav" aria-label="Sections">
-      <a href="#route">Map</a><a href="#glance">Numbers</a><a href="#journal">Journal</a>
+    <a class="brand" href="#overview">SEA&nbsp;2025<small>HIKE &amp; SEEK</small></a>
+    <nav class="tabs" role="tablist" aria-label="Sections">
+      <a class="tab" role="tab" id="tabbtn-overview" href="#overview" aria-controls="tab-overview" aria-selected="true">Overview</a>
+      <a class="tab" role="tab" id="tabbtn-journal" href="#journal" aria-controls="tab-journal" aria-selected="false">Journal</a>
     </nav>
+    <div class="strip" id="strip" aria-hidden="true" hidden></div>
+    <span class="strip-label" id="stripLabel" hidden></span>
   </div>
 </header>
 
 <main id="top">
-  <section class="hero wrap">
-    <div class="hero-grid">
-      <div>
-        <div class="eyebrow">Polarsteps travel journal · 2 Feb to 19 May 2025</div>
-        <h1>SEA<br><em>2025</em></h1>
-        <p class="tag">Hike &amp; Seek :)</p>
-        <p class="lede">Two backpacks, 106 days and 50 stops: from Bangalore through Bali, Java, Singapore, Malaysia, Thailand, Cambodia, Vietnam and Laos, and home to Bombay.</p>
-        <div class="stats" id="stats">
-          <div><b>106</b><span>days</span></div><div><b>8</b><span>countries</span></div><div><b>50</b><span>stops</span></div>
-          <div><b>21,402</b><span>km travelled</span></div><div><b>397</b><span>photos</span></div><div><b>66</b><span>videos</span></div>
-        </div>
-        <div class="actions">
-          <a class="btn primary" href="#route" id="heroPlay"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>Play the trip</a>
-          <button class="btn" id="slideshowBtn" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="14" rx="2"/><path d="M8 21h8"/></svg>Slideshow</button>
-          <button class="btn" id="shuffleBtn" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 3h5v5M4 20 21 3M21 16v5h-5M15 15l6 6M4 4l5 5"/></svg>Random memory</button>
-        </div>
-        <div id="onThisDay"></div>
-      </div>
-      <div class="polaroids" id="polaroids"></div>
-    </div>
-  </section>
-
-  <section class="section" id="route">
-    <div class="wrap">
-      <div class="section-head">
+  <div id="tab-overview" role="tabpanel" aria-labelledby="tabbtn-overview">
+    <section class="hero wrap">
+      <div class="hero-grid">
         <div>
-          <div class="eyebrow">The route</div>
-          <h2>Bangalore to Bombay, the long way</h2>
-          <p>Tap a stop to open its memory. Use the country chips to zoom in, the transport chips to show or hide legs, and Play to replay the whole trip.</p>
+          <div class="eyebrow">Polarsteps travel journal · 2 Feb to 19 May 2025</div>
+          <h1>SEA<br><em>2025</em></h1>
+          <p class="tag">Hike &amp; Seek :)</p>
+          <p class="lede">Two backpacks, 106 days and 50 stops: from Bangalore through Bali, Java, Singapore, Malaysia, Thailand, Cambodia, Vietnam and Laos, and home to Bombay.</p>
+          <div class="stats" id="stats">
+            <div><b>106</b><span>days</span></div><div><b>8</b><span>countries</span></div><div><b>50</b><span>stops</span></div>
+            <div><b>21,402</b><span>km travelled</span></div><div><b>397</b><span>photos</span></div><div><b>66</b><span>videos</span></div>
+          </div>
+          <div class="actions">
+            <a class="btn primary" href="#route" id="heroPlay"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>Play the trip</a>
+            <a class="btn" href="#journal"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h11a4 4 0 0 1 4 4v12H8a4 4 0 0 1-4-4z"/><path d="M8 8h7M8 12h7"/></svg>Read the journal</a>
+            <button class="btn" id="slideshowBtn" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="14" rx="2"/><path d="M8 21h8"/></svg>Slideshow</button>
+            <button class="btn" id="shuffleBtn" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 3h5v5M4 20 21 3M21 16v5h-5M15 15l6 6M4 4l5 5"/></svg>Random memory</button>
+          </div>
+          <div id="onThisDay"></div>
         </div>
+        <div class="polaroids" id="polaroids"></div>
       </div>
-      <div class="mapcard" id="mapcard">
-        <svg id="map" role="img" aria-label="Map of the SEA 2025 route with 50 stops"></svg>
-        <div class="map-ui" id="countryChips"></div>
-        <div class="map-legend" id="modeChips"></div>
-        <div class="map-tools">
-          <button type="button" id="playBtn" title="Play the trip" aria-label="Play the trip"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></button>
-          <button type="button" id="zoomIn" aria-label="Zoom in">+</button>
-          <button type="button" id="zoomOut" aria-label="Zoom out">−</button>
-          <button type="button" id="zoomReset" aria-label="Show whole route"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9V3h6M21 9V3h-6M3 15v6h6M21 15v6h-6"/></svg></button>
-        </div>
-        <div class="replay-hud" id="hud" hidden></div>
-        <div class="popup" id="popup" hidden></div>
-      </div>
-    </div>
-  </section>
+    </section>
 
-  <section class="section" id="glance">
-    <div class="wrap">
-      <div class="section-head">
-        <div>
-          <div class="eyebrow">By the numbers</div>
-          <h2>The trip at a glance</h2>
+    <section class="section" id="route">
+      <div class="wrap">
+        <div class="section-head">
+          <div>
+            <div class="eyebrow">The route</div>
+            <h2>Bangalore to Bombay, the long way</h2>
+            <p>Tap a stop to open its memory. Use the country chips to zoom in, the transport chips to show or hide legs, and Play to replay the whole trip.</p>
+          </div>
+        </div>
+        <div class="mapcard" id="mapcard">
+          <svg id="map" role="img" aria-label="Map of the SEA 2025 route with 50 stops"></svg>
+          <div class="map-ui" id="countryChips"></div>
+          <div class="map-legend" id="modeChips"></div>
+          <div class="map-tools">
+            <button type="button" id="playBtn" title="Play the trip" aria-label="Play the trip"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></button>
+            <button type="button" id="zoomIn" aria-label="Zoom in">+</button>
+            <button type="button" id="zoomOut" aria-label="Zoom out">−</button>
+            <button type="button" id="zoomReset" aria-label="Show whole route"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9V3h6M21 9V3h-6M3 15v6h6M21 15v6h-6"/></svg></button>
+          </div>
+          <div class="replay-hud" id="hud" hidden></div>
+          <div class="popup" id="popup" hidden></div>
         </div>
       </div>
-      <div class="glance">
-        <div class="panel span-12">
-          <h3>Weather and countries, day by day</h3>
-          <p class="sub">Temperature recorded at each stop, over the countries you were in. Tap a dot to open that stop.</p>
-          <div class="scroll-x"><svg class="chart" id="timeline" viewBox="0 0 1100 250"></svg></div>
+    </section>
+
+    <section class="section" id="glance">
+      <div class="wrap">
+        <div class="section-head">
+          <div>
+            <div class="eyebrow">By the numbers</div>
+            <h2>The trip at a glance</h2>
+          </div>
         </div>
-        <div class="panel span-7">
-          <h3>How you got around</h3>
-          <p class="sub">Distance by mode of transport across 49 legs.</p>
-          <div class="mode-rows" id="modeRows"></div>
-          <p class="note">Modes come from your stories where you mentioned them, and are estimated from GPS speed and geography otherwise. Each ticket in the journal says which.</p>
-        </div>
-        <div class="panel span-5">
-          <h3>Longest hops</h3>
-          <p class="sub">The biggest single journeys between stops.</p>
-          <ol class="hops" id="hops"></ol>
-        </div>
-        <div class="panel span-12">
-          <h3>Passport</h3>
-          <p class="sub">Entry date, days and stops in each country. Tap a stamp to jump to that chapter.</p>
-          <div class="stamps" id="stamps"></div>
+        <div class="glance">
+          <div class="panel span-12">
+            <div class="records" id="records"></div>
+          </div>
+          <div class="panel span-12">
+            <h3>Weather and countries, day by day</h3>
+            <p class="sub">Temperature recorded at each stop, over the countries you were in. Tap a dot to open that stop.</p>
+            <div class="scroll-x"><svg class="chart" id="timeline" viewBox="0 0 1100 250"></svg></div>
+          </div>
+          <div class="panel span-12">
+            <h3>Kilometres, piling up</h3>
+            <p class="sub">Distance covered since Bangalore, stacked by how you travelled.</p>
+            <div class="scroll-x"><svg class="chart" id="distChart" viewBox="0 0 1100 280"></svg></div>
+          </div>
+          <div class="panel span-7">
+            <h3>How you got around</h3>
+            <p class="sub">Distance by mode of transport across 49 legs.</p>
+            <div class="mode-rows" id="modeRows"></div>
+            <p class="note">Modes come from your stories where you mentioned them, and are estimated from GPS speed and geography otherwise. Each ticket in the journal says which.</p>
+          </div>
+          <div class="panel span-5">
+            <h3>Longest hops</h3>
+            <p class="sub">The biggest single journeys between stops.</p>
+            <ol class="hops" id="hops"></ol>
+          </div>
+          <div class="panel span-7 coffee" id="coffee">
+            <h3>The coffee trail</h3>
+            <p class="sub" id="coffeeSub">Every coffee, kopi and café in your stories, stop by stop.</p>
+            <div class="scroll-x"><svg class="chart" id="coffeeChart" viewBox="0 0 640 300"></svg></div>
+          </div>
+          <div class="panel span-5 coffee">
+            <h3>Overheard over coffee</h3>
+            <p class="sub">Lines from the journal.</p>
+            <ul class="quotes" id="coffeeQuotes"></ul>
+          </div>
+          <div class="panel span-12">
+            <h3>What the stories are about</h3>
+            <p class="sub">How often each theme comes up in your writing, stop by stop. Darker squares mean more mentions. Tap a square to read that stop.</p>
+            <div class="scroll-x"><svg class="chart" id="themeChart" viewBox="0 0 1100 420"></svg></div>
+          </div>
+          <div class="panel span-6">
+            <h3>Memories captured</h3>
+            <p class="sub">Photos and videos kept from each country.</p>
+            <div class="scroll-x"><svg class="chart" id="memChart" viewBox="0 0 520 300"></svg></div>
+          </div>
+          <div class="panel span-6">
+            <h3>Where you lingered</h3>
+            <p class="sub">The longest stays, by nights at a stop.</p>
+            <div class="scroll-x"><svg class="chart" id="stayChart" viewBox="0 0 520 300"></svg></div>
+          </div>
+          <div class="panel span-12">
+            <h3>Passport</h3>
+            <p class="sub">Entry date, days and stops in each country. Tap a stamp to jump to that chapter.</p>
+            <div class="stamps" id="stamps"></div>
+          </div>
         </div>
       </div>
-    </div>
-  </section>
+    </section>
+  </div>
 
-  <section id="journal">
-    <div class="wrap" id="chapters"></div>
-  </section>
-
-  <section class="fin wrap">
-    <div class="eyebrow">19 May 2025 · Mumbai</div>
-    <h2>Fin.</h2>
-    <p>Fifty stops later, home. Come back whenever you want to be somewhere else for a while.</p>
-    <div class="actions">
-      <button class="btn primary" id="slideshowBtn2" type="button">Watch the slideshow</button>
-      <a class="btn" href="#route">Back to the map</a>
-    </div>
-  </section>
+  <div id="tab-journal" role="tabpanel" aria-labelledby="tabbtn-journal" hidden>
+    <section class="journal-head wrap">
+      <div class="eyebrow">The journal · 50 chapters · <span id="wordCount">23,000</span> words</div>
+      <h2>Every stop, in your words</h2>
+      <p>One chapter per stop, with the story, the photos and videos, and how you got there. Jump to a country:</p>
+      <div class="jump" id="jump"></div>
+    </section>
+    <section id="chapters-wrap">
+      <div class="wrap" id="chapters"></div>
+    </section>
+    <section class="fin wrap">
+      <div class="eyebrow">19 May 2025 · Mumbai</div>
+      <h2>Fin.</h2>
+      <p>Fifty stops later, home. Come back whenever you want to be somewhere else for a while.</p>
+      <div class="actions">
+        <button class="btn primary" id="slideshowBtn2" type="button">Watch the slideshow</button>
+        <a class="btn" href="#overview">Back to the overview</a>
+      </div>
+    </section>
+  </div>
 </main>
 
 <footer><div class="wrap">SEA 2025 · stories and photos from Polarsteps · map data Natural Earth</div></footer>

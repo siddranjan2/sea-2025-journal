@@ -47,9 +47,50 @@
     renderModes();
     renderHops();
     renderStamps();
+    renderRecords();
+    renderDistance();
+    renderCoffee();
+    renderThemes();
+    renderMemories();
+    renderStays();
     renderChapters();
     wireButtons();
-    if (location.hash) setTimeout(() => { const el = document.getElementById(location.hash.slice(1)); if (el) el.scrollIntoView(); }, 50);
+    wireTabs();
+  }
+
+  /* ---------------- tabs: Overview and Journal ---------------- */
+  let currentTab = 'overview';
+  function showTab(name) {
+    if (name === currentTab) return;
+    currentTab = name;
+    ['overview', 'journal'].forEach(t => {
+      $(`#tab-${t}`).hidden = t !== name;
+      $(`#tabbtn-${t}`).setAttribute('aria-selected', String(t === name));
+    });
+    $('#strip').hidden = $('#stripLabel').hidden = name !== 'journal';
+  }
+  // Which tab an element id lives in; scrolls to it after switching.
+  function goTo(id, smooth = true) {
+    if (id === 'overview' || id === 'journal') { showTab(id); window.scrollTo({ top: 0, behavior: 'instant' }); return; }
+    const el = document.getElementById(id);
+    if (!el) return;
+    const tab = el.closest('[role="tabpanel"]');
+    const switching = tab && tab.id !== `tab-${currentTab}`;
+    if (tab) showTab(tab.id.slice(4));
+    requestAnimationFrame(() => el.scrollIntoView({ behavior: switching || !smooth || reduceMotion ? 'instant' : 'smooth' }));
+  }
+  function wireTabs() {
+    document.addEventListener('click', e => {
+      const a = e.target.closest('a[href^="#"]');
+      if (!a || e.defaultPrevented) return;
+      const id = a.getAttribute('href').slice(1);
+      if (!id) return;
+      e.preventDefault();
+      try { history.pushState(null, '', '#' + id); } catch { /* sandboxed frames may refuse */ }
+      goTo(id);
+    });
+    window.addEventListener('popstate', () => goTo(location.hash.slice(1) || 'overview', false));
+    if (location.hash.length > 1) setTimeout(() => goTo(location.hash.slice(1), false), 60);
   }
 
   const primaryMode = leg => (leg.modes.includes('flight') ? 'flight' : leg.modes[0]);
@@ -325,7 +366,7 @@
     g.insert('path', ':first-child').attr('d', area(temps)).attr('fill', 'var(--accent)').attr('fill-opacity', .08);
     const dots = g.selectAll('g.d').data(temps).join('g').attr('data-step', s => s.n)
       .attr('transform', s => `translate(${x(new Date(s.t * 1000))},${y(s.temp)})`)
-      .on('click', (e, s) => document.getElementById(`s-${s.n}`).scrollIntoView());
+      .on('click', (e, s) => goTo(`s-${s.n}`));
     dots.append('circle').attr('r', 5).attr('fill', s => `var(--c-${s.country})`).attr('stroke', 'var(--paper)').attr('stroke-width', 1.5);
     dots.append('circle').attr('r', 12).attr('fill', 'transparent');
     dots.append('title').text(s => `${s.n}. ${s.title} · ${fmtDate(s.t, s.tz)} · ${s.temp}°C${wxKind(s.weather) ? ', ' + WX_NAME[wxKind(s.weather)].toLowerCase() : ''}`);
@@ -366,6 +407,187 @@
     }).join('');
   }
 
+  /* ---------------- story themes (counted from the journal text) ---------------- */
+  const THEMES = [
+    ['Coffee & cafés', /\b(coffee|coffees|latte|espresso|cappuccino|kopi|cafe|cafes|café|cafés|ca phe)\b/gi],
+    ['Food', /\b(banh mi|pho|nasi|mie|noodles?|curry|satay|pad thai|laksa|warung|street food|dumplings?|biryani|dosa|thali|naan)\b/gi],
+    ['Beaches', /\bbeach(es)?\b/gi],
+    ['Temples', /\b(temples?|pagodas?|wat|pura)\b/gi],
+    ['Hikes & treks', /\b(hike[sd]?|hiking|trek(s|ked|king)?)\b/gi],
+    ['Waterfalls', /\bwaterfalls?\b/gi],
+    ['Markets', /\bmarkets?\b/gi],
+    ['Sunrise & sunset', /\b(sunrises?|sunsets?)\b/gi],
+    ['Rain', /\b(rain|rained|raining|rainy)\b/gi],
+    ['In the water', /\b(snorkel\w*|dive|diving|swim\w*|surf\w*|kayak\w*)\b/gi],
+    ['Beer', /\b(beers?|bintang|singha|beerlao)\b/gi],
+    ['Massages & yoga', /\b(massages?|spa|yoga)\b/gi],
+    ['Laughs', /😂|😆|🤣|:p|:P|haha/g],
+  ];
+  const countIn = (s, re) => (s.story.match(re) || []).length;
+  const words = s => (s.story.match(/\S+/g) || []).length;
+  const xBand = (W, l, r) => d3.scaleBand().domain(S.map(s => s.n)).range([l, W - r]).paddingInner(0.18);
+  const countryBand = (g, x, y, h = 6) => countryRuns().forEach(r => {
+    const a = x(r.steps[0].n), b = x(r.steps[r.steps.length - 1].n) + x.bandwidth();
+    g.append('rect').attr('x', a).attr('y', y).attr('width', b - a).attr('height', h).attr('rx', 2).attr('fill', `var(--c-${r.code})`).append('title').text(T.countries[r.code]);
+  });
+
+  function renderRecords() {
+    const by = (f, dir = 1) => S.reduce((a, b) => (dir * f(b) > dir * f(a) ? b : a));
+    const stay = by(s => s.nights), pics = by(s => s.media.length), hot = by(s => s.temp ?? -99), cool = by(s => s.temp ?? 99, -1);
+    const longStory = by(words), hop = LEGS.reduce((a, b) => (b.km > a.km ? b : a));
+    const ground = LEGS.filter(l => !l.modes.includes('flight')).reduce((a, b) => (b.km > a.km ? b : a));
+    const totalWords = S.reduce((a, s) => a + words(s), 0);
+    const coffees = S.reduce((a, s) => a + countIn(s, THEMES[0][1]), 0);
+    const R = [
+      ['Longest stay', `${stay.nights} nights`, stay.title, stay.n, ICON.local],
+      ['Most photographed', `${pics.media.length} shots`, pics.title, pics.n, '<rect x="3" y="6" width="18" height="14" rx="2"/><circle cx="12" cy="13" r="3.5"/><path d="M8 6l1.5-2h5L16 6"/>'],
+      ['Hottest stop', `${hot.temp}°C`, hot.title, hot.n, WX.sun],
+      ['Coolest stop', `${cool.temp}°C`, cool.title, cool.n, WX.cloud],
+      ['Longest ride on the ground', `${fmtKm(ground.km)} km`, `${S[ground.from - 1].title} → ${S[ground.to - 1].title}`, ground.to, ICON[primaryMode(ground)]],
+      ['Biggest hop', `${fmtKm(hop.km)} km`, `${S[hop.from - 1].title} → ${S[hop.to - 1].title}`, hop.to, ICON.flight],
+      ['Words written', fmtKm(totalWords), `longest chapter: ${longStory.title} (${fmtKm(words(longStory))})`, longStory.n, '<path d="M4 4h11a4 4 0 0 1 4 4v12H8a4 4 0 0 1-4-4z"/><path d="M8 8h7M8 12h7"/>'],
+      ['Coffee moments', coffees, 'mentions of coffee, kopi and cafés', null, '<path d="M17 8h1a4 4 0 1 1 0 8h-1"/><path d="M3 8h14v9a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4Z"/><path d="M6 2v2M10 2v2M14 2v2"/>'],
+    ];
+    $('#records').innerHTML = R.map(([k, b, v, n, ic]) => `<a class="record" href="${n ? '#s-' + n : '#coffee'}"><span class="k">${svgIcon(ic)}${k}</span><b>${b}</b><span class="v">${esc(v)}</span></a>`).join('');
+  }
+
+  function renderDistance() {
+    const svg = d3.select('#distChart'), W = 1100, H = 280, m = { l: 56, r: 120, t: 16, b: 34 };
+    const modes = MODE_ORDER.filter(mo => T.modeKm[mo] && mo !== 'local');
+    const cum = Object.fromEntries(modes.map(mo => [mo, 0]));
+    const rows = [{ t: S[0].t, ...cum }];
+    LEGS.forEach(l => {
+      const ms = l.modes.includes('flight') ? ['flight'] : l.modes.filter(mo => mo !== 'local');
+      ms.forEach(mo => { cum[mo] += l.km / ms.length; });
+      rows.push({ t: S[l.to - 1].t, ...cum });
+    });
+    rows.push({ ...rows[rows.length - 1], t: T.end });
+    const stack = d3.stack().keys(modes)(rows);
+    const x = d3.scaleTime().domain([new Date(T.start * 1000), new Date(T.end * 1000)]).range([m.l, W - m.r]);
+    const y = d3.scaleLinear().domain([0, d3.max(stack[stack.length - 1], d => d[1])]).nice().range([H - m.b, m.t]);
+    const g = svg.append('g');
+    y.ticks(5).forEach(v => {
+      g.append('line').attr('x1', m.l).attr('x2', W - m.r).attr('y1', y(v)).attr('y2', y(v)).attr('stroke', 'var(--line)');
+      g.append('text').attr('x', m.l - 8).attr('y', y(v) + 4).attr('text-anchor', 'end').text(v >= 1000 ? `${v / 1000}k` : v);
+    });
+    x.ticks(d3.timeMonth.every(1)).forEach(d => g.append('text').attr('x', x(d)).attr('y', H - 10).style('letter-spacing', '.12em').text(d3.timeFormat('%B')(d).toUpperCase()));
+    const area = d3.area().x(d => x(new Date(d.data.t * 1000))).y0(d => y(d[0])).y1(d => y(d[1])).curve(d3.curveStepAfter);
+    g.selectAll('path.a').data(stack).join('path').attr('d', area).attr('fill', d => `var(--m-${d.key})`).attr('fill-opacity', .85)
+      .append('title').text(d => `${MODE_NAME[d.key]}: ${fmtKm(T.modeKm[d.key])} km`);
+    // End labels, nudged apart so they never overlap.
+    let lastY = -Infinity;
+    stack.map(sr => ({ key: sr.key, mid: (sr[sr.length - 1][0] + sr[sr.length - 1][1]) / 2, v: sr[sr.length - 1][1] - sr[sr.length - 1][0] }))
+      .sort((a, b) => y(a.mid) - y(b.mid))
+      .forEach(d => {
+        let yy = y(d.mid) + 4; if (yy - lastY < 14) yy = lastY + 14; lastY = yy;
+        g.append('text').attr('class', 'lbl').attr('x', W - m.r + 8).attr('y', yy).attr('fill', `var(--m-${d.key})`).style('fill', `var(--m-${d.key})`).text(`${MODE_NAME[d.key]} ${fmtKm(d.v)}`);
+      });
+    // Mark the big flights.
+    LEGS.filter(l => l.modes.includes('flight') && l.km > 800).forEach(l => {
+      const s = S[l.to - 1], xx = x(new Date(s.t * 1000));
+      g.append('text').attr('class', 'lbl').attr('x', xx + 4).attr('y', m.t + 12).text(`✈ ${s.place.replace('Special capital Region of ', '')}`);
+      g.append('line').attr('x1', xx).attr('x2', xx).attr('y1', m.t).attr('y2', H - m.b).attr('stroke', 'var(--ink-2)').attr('stroke-dasharray', '2 4');
+    });
+  }
+
+  function renderCoffee() {
+    const re = THEMES[0][1];
+    const counts = S.map(s => countIn(s, re));
+    const total = d3.sum(counts);
+    const svg = d3.select('#coffeeChart'), W = 640, H = 300, m = { l: 30, r: 40, t: 24, b: 40 };
+    const x = xBand(W, m.l, m.r);
+    const y = d3.scaleLinear().domain([0, d3.max(counts) + 1]).range([H - m.b, m.t]);
+    const yc = d3.scaleLinear().domain([0, total]).range([H - m.b, m.t]);
+    const g = svg.append('g');
+    y.ticks(4).forEach(v => {
+      g.append('line').attr('x1', m.l).attr('x2', W - m.r).attr('y1', y(v)).attr('y2', y(v)).attr('stroke', 'var(--line)');
+      g.append('text').attr('x', m.l - 6).attr('y', y(v) + 4).attr('text-anchor', 'end').text(v);
+    });
+    g.append('text').attr('x', W - m.r + 6).attr('y', yc(total) + 4).text(total).attr('class', 'lbl');
+    g.append('text').attr('x', W - m.r + 6).attr('y', yc(total) + 18).text('total');
+    // Cups: one stacked circle per mention.
+    S.forEach((s, i) => {
+      const c = counts[i];
+      const col = g.append('g').attr('data-step', s.n).on('click', () => goTo(`s-${s.n}`));
+      col.append('rect').attr('x', x(s.n)).attr('y', m.t).attr('width', x.bandwidth()).attr('height', H - m.b - m.t).attr('fill', 'transparent');
+      for (let k = 0; k < c; k++) {
+        col.append('circle').attr('cx', x(s.n) + x.bandwidth() / 2).attr('cy', y(k + 0.5)).attr('r', Math.min(x.bandwidth() / 2, (y(0) - y(1)) / 2 - 1))
+          .attr('fill', 'var(--coffee)');
+      }
+      col.append('title').text(`${s.n}. ${s.title}: ${c} mention${c === 1 ? '' : 's'}`);
+    });
+    let run = 0;
+    const line = d3.line().x((d, i) => x(S[i].n) + x.bandwidth() / 2).y(d => yc(d)).curve(d3.curveStepAfter);
+    g.append('path').attr('d', line(counts.map(c => (run += c)))).attr('fill', 'none').attr('stroke', 'var(--accent)').attr('stroke-width', 2).attr('stroke-dasharray', '4 3');
+    countryBand(g, x, H - m.b + 6);
+    const peak = S[counts.indexOf(d3.max(counts))];
+    g.append('text').attr('class', 'lbl').attr('x', x(peak.n) + x.bandwidth() / 2).attr('y', y(d3.max(counts)) - 6).attr('text-anchor', 'middle').text(`${peak.place}`);
+    g.append('text').attr('x', m.l).attr('y', H - 8).text('Dots: mentions at each stop · dashed line: running total');
+    $('#coffeeSub').textContent = `${total} mentions of coffee, kopi and cafés across ${counts.filter(Boolean).length} stops. Tap a column to read that stop.`;
+    // Quotes: short sentences that actually talk about coffee.
+    const seen = new Set();
+    const quotes = S.flatMap(s => (s.story.match(/[^.!?\n]*\b(coffee|kopi|ca phe)\b[^.!?\n]*[.!?]?/gi) || []).map(q => [s, q.trim()]))
+      .filter(([s, q]) => q.length > 40 && q.length < 190 && !seen.has(s.n) && seen.add(s.n)).slice(0, 5);
+    $('#coffeeQuotes').innerHTML = quotes.map(([s, q]) => `<li><q>${esc(q)}</q><a href="#s-${s.n}">${s.n} · ${esc(s.title)} →</a></li>`).join('') || '<li class="note">No coffee lines found.</li>';
+  }
+
+  function renderThemes() {
+    const svg = d3.select('#themeChart'), W = 1100, m = { l: 150, r: 56, t: 30, b: 12 }, rowH = 28;
+    const H = m.t + THEMES.length * rowH + m.b;
+    svg.attr('viewBox', `0 0 ${W} ${H}`);
+    const x = xBand(W, m.l, m.r).paddingInner(0.12);
+    const g = svg.append('g');
+    countryBand(g, x, 8, 8);
+    THEMES.forEach(([name, re], r) => {
+      const y = m.t + r * rowH;
+      const counts = S.map(s => countIn(s, re));
+      const max = d3.max(counts) || 1;
+      g.append('text').attr('class', 'lbl').attr('x', m.l - 10).attr('y', y + rowH / 2 + 3).attr('text-anchor', 'end').text(name);
+      g.append('text').attr('x', W - m.r + 10).attr('y', y + rowH / 2 + 3).text(d3.sum(counts));
+      S.forEach((s, i) => {
+        const c = counts[i];
+        const cell = g.append('rect').attr('x', x(s.n)).attr('y', y + 3).attr('width', x.bandwidth()).attr('height', rowH - 6).attr('rx', 3)
+          .attr('data-step', s.n).on('click', () => goTo(`s-${s.n}`));
+        if (c) cell.attr('fill', `var(--c-${s.country})`).attr('fill-opacity', 0.18 + 0.82 * (c / max));
+        else cell.attr('fill', 'var(--bg)');
+        cell.append('title').text(`${name} · ${s.n}. ${s.title}: ${c}`);
+      });
+    });
+  }
+
+  function renderMemories() {
+    const svg = d3.select('#memChart'), W = 520, m = { l: 92, r: 70, t: 8, b: 20 }, rowH = 32;
+    const codes = Object.keys(T.countries).filter(c => S.some(s => s.country === c));
+    const rows = codes.map(c => ({ c, p: d3.sum(S.filter(s => s.country === c), s => s.photos.length), v: d3.sum(S.filter(s => s.country === c), s => s.videos.length) }));
+    const H = m.t + rows.length * rowH + m.b; svg.attr('viewBox', `0 0 ${W} ${H}`);
+    const x = d3.scaleLinear().domain([0, d3.max(rows, r => r.p + r.v)]).range([m.l, W - m.r]);
+    const g = svg.append('g');
+    rows.forEach((r, i) => {
+      const y = m.t + i * rowH;
+      const row = g.append('a').attr('href', `#c-${r.c}`);
+      row.append('text').attr('class', 'lbl').attr('x', m.l - 10).attr('y', y + 18).attr('text-anchor', 'end').text(T.countries[r.c]);
+      row.append('rect').attr('x', m.l).attr('y', y + 6).attr('width', x(r.p) - m.l).attr('height', 18).attr('rx', 3).attr('fill', `var(--c-${r.c})`);
+      row.append('rect').attr('x', x(r.p) + 1).attr('y', y + 6).attr('width', Math.max(0, x(r.p + r.v) - x(r.p) - 1)).attr('height', 18).attr('rx', 3).attr('fill', `var(--c-${r.c})`).attr('fill-opacity', .4);
+      row.append('text').attr('x', x(r.p + r.v) + 8).attr('y', y + 19).text(`${r.p} + ${r.v}▶`);
+    });
+    g.append('text').attr('x', m.l).attr('y', H - 4).text('Solid: photos · faded: videos');
+  }
+
+  function renderStays() {
+    const svg = d3.select('#stayChart'), W = 520, m = { l: 168, r: 56, t: 8, b: 8 }, rowH = 28;
+    const top = S.filter(s => s.nights).sort((a, b) => b.nights - a.nights || a.n - b.n).slice(0, 10);
+    const H = m.t + top.length * rowH + m.b; svg.attr('viewBox', `0 0 ${W} ${H}`);
+    const x = d3.scaleLinear().domain([0, top[0].nights]).range([m.l, W - m.r]);
+    const g = svg.append('g');
+    top.forEach((s, i) => {
+      const y = m.t + i * rowH;
+      const row = g.append('a').attr('href', `#s-${s.n}`);
+      row.append('text').attr('class', 'lbl').attr('x', m.l - 10).attr('y', y + 17).attr('text-anchor', 'end').text(s.title.length > 22 ? s.title.slice(0, 21) + '…' : s.title);
+      row.append('rect').attr('x', m.l).attr('y', y + 5).attr('width', x(s.nights) - m.l).attr('height', 17).attr('rx', 3).attr('fill', `var(--c-${s.country})`);
+      row.append('text').attr('x', x(s.nights) + 8).attr('y', y + 18).text(`${s.nights} nights`);
+    });
+  }
+
   /* ---------------- chapters ---------------- */
   function renderChapters() {
     const box = $('#chapters');
@@ -380,6 +602,8 @@
       r.steps.forEach(s => html.push(chapterHTML(s)));
     });
     box.innerHTML = html.join('');
+    $('#wordCount').textContent = fmtKm(S.reduce((n, s) => n + words(s), 0));
+    $('#jump').innerHTML = countryRuns().map((r, ri) => `<a class="chip" href="#c-${r.code}${ri && r.code === 'IN' ? '-home' : ''}"><span class="dot" style="background:var(--c-${r.code})"></span>${esc(T.countries[r.code])}${r.code === 'IN' ? (ri ? ' (home)' : ' (start)') : ''}</a>`).join('');
 
     box.querySelectorAll('.more').forEach(b => b.addEventListener('click', () => {
       const st = b.previousElementSibling; const open = st.classList.toggle('clamped');
@@ -464,7 +688,7 @@
     svg.append('text').attr('x', p[0]).attr('y', p[1] + 26).attr('text-anchor', 'middle').attr('style', 'font:500 13px var(--f-mono);fill:var(--ink)').text(s.place.replace('Special capital Region of ', '').slice(0, 24));
     // Clicking the mini-map opens the stop on the big map.
     el.style.cursor = 'pointer';
-    el.addEventListener('click', () => { document.getElementById('route').scrollIntoView(); setTimeout(() => mapApi.openPopup(s), 450); });
+    el.addEventListener('click', () => { goTo('route', false); setTimeout(() => mapApi.openPopup(s), 350); });
   }
 
   /* ---------------- lightbox and slideshow ---------------- */
@@ -481,7 +705,7 @@
     lb.querySelector('#lbX').onclick = closeLightbox;
     lb.querySelector('.prev').onclick = () => step(-1);
     lb.querySelector('.next').onclick = () => step(1);
-    lb.querySelector('#lbGo').onclick = () => { const s = lbItems[lbIndex].step; closeLightbox(); document.getElementById(`s-${s.n}`).scrollIntoView(); };
+    lb.querySelector('#lbGo').onclick = () => { const s = lbItems[lbIndex].step; closeLightbox(); goTo(`s-${s.n}`, false); };
     const pb = lb.querySelector('#lbPause');
     if (pb) pb.onclick = () => { lbAuto = !lbAuto; pb.textContent = lbAuto ? 'Pause' : 'Play'; show(); };
     let x0 = null;
