@@ -170,6 +170,7 @@ const data = {
   land: { type: 'FeatureCollection', features: land },
   // Hand-curated food and drink notes from the stories (see scripts/food.json).
   food: (({ _note, ...rest }) => rest)(JSON.parse(fs.readFileSync(path.join(__dirname, 'food.json'), 'utf8'))),
+  adventures: JSON.parse(fs.readFileSync(path.join(__dirname, 'adventure.json'), 'utf8')).items,
 };
 
 fs.mkdirSync(path.join(ROOT, 'site'), { recursive: true });

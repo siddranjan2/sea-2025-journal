@@ -74,6 +74,7 @@
     renderMemories();
     renderStays();
     renderFood();
+    renderAdventure();
     renderChapters();
     wireButtons();
     wireTabs();
@@ -83,6 +84,7 @@
   let currentTab = 'overview';
   function showTab(name) {
     if (name === currentTab) return;
+    tabScroll[currentTab] = window.scrollY;
     currentTab = name;
     ['overview', 'journal'].forEach(t => {
       $(`#tab-${t}`).hidden = t !== name;
@@ -91,8 +93,15 @@
     $('#strip').hidden = $('#stripLabel').hidden = name !== 'journal';
   }
   // Which tab an element id lives in; scrolls to it after switching.
+  // Each tab remembers where you were, so coming back lands at the same spot.
+  const tabScroll = { overview: 0, journal: 0 };
   function goTo(id, smooth = true) {
-    if (id === 'overview' || id === 'journal') { showTab(id); window.scrollTo({ top: 0, behavior: 'instant' }); return; }
+    if (id === 'overview' || id === 'journal') {
+      const same = id === currentTab;
+      showTab(id);
+      window.scrollTo({ top: same ? 0 : tabScroll[id], behavior: 'instant' });
+      return;
+    }
     const el = document.getElementById(id);
     if (!el) return;
     const tab = el.closest('[role="tabpanel"]');
@@ -632,6 +641,9 @@
 
     const tag = x => `<a class="ftag ${x.verdict}" href="#s-${x.n}" title="${VERDICT[x.verdict][1]} · ${esc(st(x.n).title)}"><i>${VERDICT[x.verdict][0]}</i>${esc(x.name)}</a>`;
     const order = []; S.forEach(s => { if (s.country !== 'IN' && !order.includes(s.country)) order.push(s.country); });
+    // On the plate: a scrolling strip of food photos.
+    const plates = [...F.places, ...F.home.map(h => ({ ...h, name: h.what })), ...F.drinks].filter(p => p.img).sort((a, b) => a.n - b.n);
+    $('#plates').innerHTML = plates.map(p => plateHTML(p.img, p.n, p.name, p.what || p.note || '')).join('');
     $('#tasteGrid').innerHTML = order.map(c => {
       const inC = x => st(x.n).country === c;
       const dishes = F.dishes.filter(inC), drinks = F.drinks.filter(inC), places = F.places.filter(inC);
@@ -645,7 +657,7 @@
     $('#verdicts').innerHTML = ['loved', 'okay', 'nope'].map(v => {
       const ps = F.places.filter(p => p.verdict === v);
       return `<div class="vcol ${v}"><h4><span class="n">${ps.length}</span>${VERDICT[v][0]} ${VERDICT[v][1]}</h4><div class="vlist">${ps.map(p =>
-        `<a class="fplace" href="#s-${p.n}"><span class="pn">${flag(st(p.n).country, T.countries[st(p.n).country])}${esc(p.name)}</span><span class="pw">${stopLabel(p.n)} · ${esc(p.what)}</span><q>${esc(p.quote)}</q></a>`).join('')}</div></div>`;
+        `<a class="fplace${p.img ? ' has-img' : ''}" href="#s-${p.n}">${p.img ? `<img src="${imgRef(p.img).src}" alt="" loading="lazy">` : ''}<span class="pn">${flag(st(p.n).country, T.countries[st(p.n).country])}${esc(p.name)}</span><span class="pw">${stopLabel(p.n)} · ${esc(p.what)}</span><q>${esc(p.quote)}</q></a>`).join('')}</div></div>`;
     }).join('');
 
     // Missing home: Indian food moments on the 106-day line between the two India stops.
@@ -670,6 +682,118 @@
     $('#homeList').innerHTML = F.home.map((h, i) => `<li><a href="#s-${h.n}" style="font-size:12px"><b style="color:var(--c-IN)">${i + 1}</b> · Day ${Math.round((st(h.n).t - T.start) / 86400)} · ${esc(st(h.n).title)} · ${esc(h.what)}</a><q>${esc(h.quote)}</q></li>`).join('');
 
     $('#drinks').innerHTML = F.drinks.map(d => `<li><a href="#s-${d.n}">${flag(st(d.n).country, T.countries[st(d.n).country])}<b>${esc(d.name)} <span class="mono" style="font-size:12px;color:var(--muted)">${VERDICT[d.verdict][0]}</span></b><span>${esc(d.note)}</span></a></li>`).join('');
+  }
+
+  /* ---------------- overview images ---------------- */
+  // 'NN-KK' is photo KK of stop NN; 'vNN-KK' is the preview frame of that stop's video KK.
+  function imgRef(ref) {
+    const v = ref[0] === 'v', [n, k] = ref.replace('v', '').split('-').map(Number), s = S[n - 1];
+    const m = s && (v ? s.videos[k - 1] : s.photos[k - 1]);
+    return m ? { src: v ? m.poster : m.src, lqip: v ? m.poster : m.lqip } : { src: '', lqip: '' };
+  }
+  function plateHTML(ref, n, title, sub) {
+    const im = imgRef(ref), s = S[n - 1];
+    return `<a class="plate" href="#s-${n}" style="background-image:url('${im.lqip}')"><img src="${im.src}" alt="${esc(title)}" loading="lazy"><span class="cap"><b>${flag(s.country, T.countries[s.country])}${esc(title)}</b><span>${esc(s.place.replace('Special capital Region of ', ''))}${sub ? ' · ' + esc(sub) : ''}</span></span></a>`;
+  }
+
+  /* ---------------- adventure (overview tab) ---------------- */
+  const KIND = {
+    foot: ['On foot', '<path d="m8 3 4 8 5-5 5 15H2L8 3Z"/>'],
+    water: ['On the water', '<path d="M2 6c.6.5 1.2 1 2.5 1C7 7 7 5 9.5 5c2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1M2 12c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1M2 18c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"/>'],
+    wheels: ['On wheels', ICON.scooter],
+    high: ['Up high', '<path d="M12 2v6M5 8h14M7 8l5 8 5-8M12 16v6M9 22h6"/>'],
+  };
+  const KIND_ORDER = ['foot', 'water', 'wheels', 'high'];
+  const bolts = t => `<span class="bolts" title="Thrill ${t} of 5">${'⚡'.repeat(t)}<span class="off">${'⚡'.repeat(5 - t)}</span></span>`;
+  function renderAdventure() {
+    const A = (T.adventures || []).slice().sort((a, b) => a.n - b.n);
+    if (!A.length) return;
+    const st = n => S[n - 1];
+    const kindTag = k => `<span class="kind" style="--kc:var(--k-${k})">${svgIcon(KIND[k][1])}${KIND[k][0]}</span>`;
+
+    // Photo mosaic of the big ones.
+    const heroPick = A.filter(a => a.img).sort((a, b) => b.thrill - a.thrill || a.n - b.n).slice(0, 5);
+    $('#advHero').innerHTML = heroPick.map(a => plateHTML(a.img, a.n, a.name, '')).join('');
+
+    const countries = new Set(A.map(a => st(a.n).country));
+    const tiles = [
+      ['Adventures', A.length, `across ${countries.size} countries`],
+      ...KIND_ORDER.map(k => [KIND[k][0], A.filter(a => a.kind === k).length, { foot: 'treks, hikes and scrambles', water: 'surf, raft, kayak, snorkel, swim', wheels: 'scooters, ATV, jeeps and bikes', high: 'ziplines, abseils and jumps' }[k]]),
+      ['Max thrill', A.filter(a => a.thrill === 5).length, A.filter(a => a.thrill === 5).map(a => a.name.split(/[:,]/)[0]).join(', ')],
+    ];
+    $('#advStats').innerHTML = tiles.map(([k, b, v]) => `<div class="record"><span class="k">${k}</span><b>${b}</b><span class="v">${esc(v)}</span></div>`).join('');
+
+    // Timeline: one lane per kind.
+    const svg = d3.select('#advTimeline'), W = 1100, H = 300, m = { l: 130, r: 20, t: 16, b: 56 };
+    const x = d3.scaleTime().domain([new Date(T.start * 1000), new Date(T.end * 1000)]).range([m.l, W - m.r]);
+    const lane = d3.scaleBand().domain(KIND_ORDER).range([m.t, H - m.b]).paddingInner(0.1);
+    const g = svg.append('g');
+    KIND_ORDER.forEach((k, i) => {
+      g.append('rect').attr('x', m.l).attr('y', lane(k)).attr('width', W - m.r - m.l).attr('height', lane.bandwidth()).attr('rx', 8).attr('fill', i % 2 ? 'var(--bg)' : 'transparent');
+      g.append('text').attr('class', 'lbl').attr('x', m.l - 12).attr('y', lane(k) + lane.bandwidth() / 2 + 4).attr('text-anchor', 'end').style('fill', `var(--k-${k})`).text(KIND[k][0]);
+    });
+    const ry = H - m.b + 8;
+    countryRuns().forEach((r, i, runs) => {
+      const x0 = x(new Date(r.steps[0].t * 1000)), x1 = x(new Date((runs[i + 1] ? runs[i + 1].steps[0].t : T.end) * 1000));
+      g.append('rect').attr('x', x0).attr('y', ry).attr('width', Math.max(2, x1 - x0 - 1)).attr('height', 6).attr('rx', 2).attr('fill', `var(--c-${r.code})`);
+      if (x1 - x0 > 40) g.append('svg').attr('x', (x0 + x1) / 2 - 9).attr('y', ry + 11).attr('width', 18).attr('height', 12).attr('viewBox', '0 0 30 20').html(FLAG_BODY[r.code]);
+    });
+    x.ticks(d3.timeMonth.every(1)).forEach(d => g.append('text').attr('x', x(d)).attr('y', H - 6).style('letter-spacing', '.12em').text(d3.timeFormat('%B')(d).toUpperCase()));
+    // Spread adventures at the same stop and lane a little, so they don't sit on top of each other.
+    const seen = {};
+    A.forEach(a => {
+      const s = st(a.n), key = a.n + a.kind; seen[key] = (seen[key] || 0) + 1;
+      const xx = x(new Date(s.t * 1000)) + (seen[key] - 1) * 9, yy = lane(a.kind) + lane.bandwidth() / 2 + ((seen[key] - 1) % 2 ? -8 : 0);
+      const dot = g.append('a').attr('href', `#s-${a.n}`);
+      dot.append('circle').attr('cx', xx).attr('cy', yy).attr('r', 4 + a.thrill * 2.2).attr('fill', `var(--k-${a.kind})`).attr('fill-opacity', .78).attr('stroke', 'var(--paper)').attr('stroke-width', 1.5);
+      dot.append('title').text(`${a.name} · ${s.place}, ${T.countries[s.country]} · ${fmtDate(s.t, s.tz)} · thrill ${a.thrill}/5`);
+    });
+    A.filter(a => a.thrill === 5).forEach(a => {
+      const s = st(a.n), xx = x(new Date(s.t * 1000)), yy = lane(a.kind) + lane.bandwidth() / 2;
+      g.append('text').attr('class', 'lbl').attr('x', xx + 18).attr('y', yy + 4).text(a.name.split(/[:,]/)[0].replace(' night trek and the blue fire', ''));
+    });
+
+    // Map of where.
+    const ms = d3.select('#advMap'), MW = 460, MH = 520;
+    const pts = A.map(a => [st(a.n).lon, st(a.n).lat]);
+    const proj = d3.geoMercator().fitExtent([[24, 24], [MW - 24, MH - 24]], { type: 'MultiPoint', coordinates: pts }).clipExtent([[0, 0], [MW, MH]]);
+    ms.append('g').attr('class', 'land').selectAll('path').data(T.land.features).join('path').attr('d', d3.geoPath(proj));
+    const at = {};
+    A.forEach(a => {
+      const s = st(a.n), [px, py] = proj([s.lon, s.lat]), c = (at[a.n] = (at[a.n] || 0) + 1) - 1;
+      const ang = c * 2.1, off = c ? 9 : 0;
+      const p = ms.append('a').attr('href', `#s-${a.n}`);
+      p.append('circle').attr('cx', px + off * Math.cos(ang)).attr('cy', py + off * Math.sin(ang)).attr('r', 4 + a.thrill * 1.3).attr('fill', `var(--k-${a.kind})`).attr('fill-opacity', .85).attr('stroke', 'var(--paper)').attr('stroke-width', 1.5);
+      p.append('title').text(`${a.name} · ${s.place}`);
+    });
+    const lg = ms.append('g').attr('transform', `translate(14, ${MH - 14 - KIND_ORDER.length * 18})`);
+    KIND_ORDER.forEach((k, i) => {
+      lg.append('circle').attr('cx', 6).attr('cy', i * 18 + 6).attr('r', 6).attr('fill', `var(--k-${k})`);
+      lg.append('text').attr('x', 18).attr('y', i * 18 + 10).attr('style', 'font:500 12px var(--f-mono);fill:var(--ink)').text(KIND[k][0]);
+    });
+
+    // Thrill-o-meter
+    $('#thrills').innerHTML = A.slice().sort((a, b) => b.thrill - a.thrill || a.n - b.n).slice(0, 8).map(a => {
+      const s = st(a.n);
+      return `<li><a href="#s-${a.n}">${a.img ? `<img src="${imgRef(a.img).src}" alt="" loading="lazy">` : `<span class="noimg"></span>`}<span class="t"><b>${esc(a.name)}</b><span>${flag(s.country, T.countries[s.country])}${esc(s.place)} · ${fmtDate(s.t, s.tz)}</span></span>${bolts(a.thrill)}</a></li>`;
+    }).join('');
+
+    // Cards with a kind filter.
+    const card = a => {
+      const s = st(a.n), im = a.img && imgRef(a.img);
+      return `<a class="adv" href="#s-${a.n}" data-kind="${a.kind}" style="--kc:var(--k-${a.kind})">
+        ${im ? `<div class="ph" style="background-image:url('${im.lqip}')"><img src="${im.src}" alt="" loading="lazy">${kindTag(a.kind)}</div>` : `<div class="ph none">${svgIcon(KIND[a.kind][1])}${kindTag(a.kind)}</div>`}
+        <div class="bd"><div class="meta"><span>${flag(s.country, T.countries[s.country])}${esc(s.place)} · ${fmtDate(s.t, s.tz)}</span>${bolts(a.thrill)}</div><h4>${esc(a.name)}</h4><q>${esc(a.quote)}</q></div></a>`;
+    };
+    $('#advGrid').innerHTML = A.map(card).join('');
+    $('#advCount').textContent = `All ${A.length}, in order, each with the line from the journal.`;
+    const fb = $('#advFilter');
+    fb.innerHTML = `<button class="chip" type="button" data-k="" aria-pressed="true">All ${A.length}</button>` + KIND_ORDER.map(k => `<button class="chip" type="button" data-k="${k}" aria-pressed="false" style="color:var(--k-${k})">${svgIcon(KIND[k][1], 'width="14" height="14"')}<span style="color:var(--ink)">${KIND[k][0]} ${A.filter(a => a.kind === k).length}</span></button>`).join('');
+    fb.addEventListener('click', e => {
+      const b = e.target.closest('button'); if (!b) return;
+      fb.querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', String(x === b)));
+      $('#advGrid').querySelectorAll('.adv').forEach(c => { c.hidden = !!b.dataset.k && c.dataset.kind !== b.dataset.k; });
+    });
   }
 
   /* ---------------- chapters ---------------- */

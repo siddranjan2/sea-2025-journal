@@ -148,6 +148,7 @@
           </div>
         </div>
         <div class="glance">
+          <div class="span-12 plate-strip" id="plates" aria-label="Food photos"></div>
           <div class="panel span-12"><div class="records" id="foodStats"></div></div>
           <div class="panel span-12">
             <h3>A taste of each country</h3>
@@ -169,6 +170,43 @@
             <h3>Raise a glass</h3>
             <p class="sub">The drinks that made the stories.</p>
             <ul class="drinks" id="drinks"></ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="adventure">
+      <div class="wrap">
+        <div class="section-head">
+          <div>
+            <div class="eyebrow">Adventure</div>
+            <h2>Hike, ride, swim, jump</h2>
+            <p>Every adventure the stories mention, from the first surf lesson to the last scooter ride. The thrill rating is our reading of how scary each one sounded.</p>
+          </div>
+        </div>
+        <div class="glance">
+          <div class="span-12 adv-hero" id="advHero"></div>
+          <div class="panel span-12"><div class="records" id="advStats"></div></div>
+          <div class="panel span-12">
+            <h3>The adventure timeline</h3>
+            <p class="sub">Each dot is one adventure, sized by thrill. Tap one to read that stop.</p>
+            <div class="scroll-x"><svg class="chart" id="advTimeline" viewBox="0 0 1100 300"></svg></div>
+          </div>
+          <div class="panel span-5">
+            <h3>Where it happened</h3>
+            <p class="sub">Adventures on the map, coloured by type.</p>
+            <svg class="advmap" id="advMap" viewBox="0 0 460 520" role="img" aria-label="Map of adventure locations"></svg>
+          </div>
+          <div class="panel span-7">
+            <h3>Thrill-o-meter</h3>
+            <p class="sub">The scariest ones, ranked.</p>
+            <ol class="thrills" id="thrills"></ol>
+          </div>
+          <div class="panel span-12">
+            <h3>All the adventures</h3>
+            <p class="sub" id="advCount">In order, with the line from the journal.</p>
+            <div class="adv-filter" id="advFilter"></div>
+            <div class="adv-grid" id="advGrid"></div>
           </div>
         </div>
       </div>
