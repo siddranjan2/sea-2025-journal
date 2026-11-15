@@ -35,7 +35,10 @@ const inlineScript = s => s.replace(/<\/script/gi, '<\\/script');
   const html = fs.readFileSync(path.join(SITE, 'index.html'), 'utf8')
     .replace(/<link rel="stylesheet" href="style\.css[^"]*">/, () => `<style>\n${fs.readFileSync(path.join(SITE, 'style.css'), 'utf8')}\n</style>`)
     .replace(/<script src="https:\/\/cdnjs[^"]+d3[^"]*"><\/script>/, '__D3__')
-    .replace(/<script src="app\.js[^"]*"><\/script>/, '__APP__');
+    .replace(/<script src="app\.js[^"]*"><\/script>/, '__APP__')
+    // One file: inline the SVG favicon and drop icons that would point at missing neighbours.
+    .replace('href="favicon.svg"', () => `href="data:image/svg+xml;base64,${fs.readFileSync(path.join(SITE, 'favicon.svg')).toString('base64')}"`)
+    .replace(/<link rel="(icon|apple-touch-icon|manifest)" href="(favicon-32\.png|apple-touch-icon\.png|site\.webmanifest)"[^>]*>\n/g, '');
   const d3 = await d3Source();
   const out = html
     .replace('__D3__', () => `<script>${inlineScript(d3)}</script>`)

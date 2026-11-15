@@ -1,0 +1,27 @@
+{
+  "name": "SEA 2025 · Hike & Seek: a Southeast Asia travel journal",
+  "short_name": "SEA 2025",
+  "description": "Two backpacks, 106 days and 50 stops across Indonesia, Singapore, Malaysia, Thailand, Cambodia, Vietnam and Laos (February to May 2025): route map, food, adventures, photos and the full journal.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#eef2ee",
+  "theme_color": "#13262d",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    },
+    {
+      "src": "favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}

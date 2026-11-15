@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://siddranjan2.github.io/sea-2025-journal/sitemap.xml
