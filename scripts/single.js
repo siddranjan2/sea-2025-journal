@@ -33,9 +33,9 @@ const inlineScript = s => s.replace(/<\/script/gi, '<\\/script');
   }
 
   const html = fs.readFileSync(path.join(SITE, 'index.html'), 'utf8')
-    .replace('<link rel="stylesheet" href="style.css">', () => `<style>\n${fs.readFileSync(path.join(SITE, 'style.css'), 'utf8')}\n</style>`)
+    .replace(/<link rel="stylesheet" href="style\.css[^"]*">/, () => `<style>\n${fs.readFileSync(path.join(SITE, 'style.css'), 'utf8')}\n</style>`)
     .replace(/<script src="https:\/\/cdnjs[^"]+d3[^"]*"><\/script>/, '__D3__')
-    .replace('<script src="app.js"></script>', '__APP__');
+    .replace(/<script src="app\.js[^"]*"><\/script>/, '__APP__');
   const d3 = await d3Source();
   const out = html
     .replace('__D3__', () => `<script>${inlineScript(d3)}</script>`)

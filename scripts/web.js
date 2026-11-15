@@ -14,5 +14,9 @@ ${page.slice(0, page.indexOf('<header'))}</head>
 ${page.slice(page.indexOf('<header'))}</body>
 </html>
 `;
-fs.writeFileSync(path.join(ROOT, 'site', 'index.html'), doc);
+// Version the CSS and JS URLs by content so browsers and the Pages CDN never serve a stale copy.
+const ver = f => require('crypto').createHash('md5').update(fs.readFileSync(path.join(ROOT, 'site', f))).digest('hex').slice(0, 8);
+fs.writeFileSync(path.join(ROOT, 'site', 'index.html'), doc
+  .replace('href="style.css"', `href="style.css?v=${ver('style.css')}"`)
+  .replace('src="app.js"', `src="app.js?v=${ver('app.js')}"`));
 console.log('wrote site/index.html');
