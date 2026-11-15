@@ -1,5 +1,7 @@
 /* Layout: a passport-and-route-map travel journal. Hero, a big hand-drawn route map,
    at-a-glance charts, then one chapter per stop grouped behind passport stamps. */
+/* The artifact host hides [hidden] for us; standalone hosts need this or display:grid on .lightbox wins. */
+[hidden] { display: none !important; }
 :root {
   --bg: #eef2ee;
   --paper: #fbfcf9;
