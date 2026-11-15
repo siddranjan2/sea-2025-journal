@@ -13,11 +13,11 @@
     { "n": 19, "name": "Theme-park rides", "kind": "high", "thrill": 2, "img": "20-01", "quote": "Like school kids, running around from ride to ride." },
     { "n": 23, "name": "Road-bike ride to Batu Ferringhi", "kind": "wheels", "thrill": 3, "img": "23-05", "quote": "A beautiful ride along the coast, with quite a few changes in elevation adding to the heart pump." },
     { "n": 24, "name": "Scooter loop up Gunung Raya", "kind": "wheels", "thrill": 2, "img": "24-06", "quote": "Much better than paying RM 85 for a cable car ride." },
-    { "n": 25, "name": "Jet-ski island tour", "kind": "water", "thrill": 4, "img": null, "quote": "Not for the fainthearted. I hung on for dear life while Sidd had the time of his life." },
+    { "n": 25, "name": "Jet-ski island tour", "kind": "water", "thrill": 4, "img": "24-04", "quote": "Not for the fainthearted. I hung on for dear life while Sidd had the time of his life." },
     { "n": 26, "name": "Mangrove kayaking", "kind": "water", "thrill": 2, "img": "v26-02", "quote": "The water was reducing by the minute, so we got stuck at multiple places." },
     { "n": 29, "name": "Snorkelling around Nang Yuan", "kind": "water", "thrill": 2, "img": "29-10", "quote": "Except for when I got to see a huuuge 150 yr old turtle." },
     { "n": 29, "name": "Rock-and-rope scramble to John-Suwan Viewpoint", "kind": "foot", "thrill": 3, "img": "29-04", "quote": "The hike will basically turn you into Spiderman." },
-    { "n": 32, "name": "32 km temple circuit by cycle (Sidd)", "kind": "wheels", "thrill": 3, "img": null, "quote": "Sidd left at 5 for a 32 km cycle trip across all the temples." },
+    { "n": 32, "name": "32 km temple circuit by cycle (Sidd)", "kind": "wheels", "thrill": 3, "img": "32-09", "quote": "Sidd left at 5 for a 32 km cycle trip across all the temples." },
     { "n": 33, "name": "Off-road scooter and jetty jumps", "kind": "wheels", "thrill": 3, "img": "33-06", "quote": "Exploring here meant quite a bit of treacherous off-roading." },
     { "n": 36, "name": "Alpine coaster at Datanla", "kind": "high", "thrill": 2, "img": "v36-01", "quote": "Checked out the Alpine roller coaster at the Datanla waterfall." },
     { "n": 36, "name": "Canyoning: zipline, swim, hike, abseil", "kind": "high", "thrill": 5, "img": "36-03", "quote": "Every cliff I contemplated sitting out, but I'm glad I didn't." },
@@ -26,14 +26,14 @@
     { "n": 42, "name": "Kayaking in Bai Tu Long Bay", "kind": "water", "thrill": 2, "img": "42-05", "quote": "My parents had turned around midway, back to the boat." },
     { "n": 43, "name": "Ha Giang Loop: 3 days on scooters", "kind": "wheels", "thrill": 4, "img": "v43-04", "quote": "Literally a pain in the ass, but not figuratively :p" },
     { "n": 43, "name": "Bamboo raft to a cave, then a cold swim", "kind": "water", "thrill": 2, "img": "43-15", "quote": "The water was extremely cold but a lot of fun!" },
-    { "n": 45, "name": "Zip line and jumps", "kind": "high", "thrill": 4, "img": null, "quote": "Sidd kept jumping from this one platform and forced me to jump too." },
-    { "n": 45, "name": "Kayaking the Nam Song", "kind": "water", "thrill": 2, "img": null, "quote": "We passed all these bars while kayaking and watched everyone partying hard." },
+    { "n": 45, "name": "Zip line and jumps", "kind": "high", "thrill": 4, "img": "45-05", "quote": "Sidd kept jumping from this one platform and forced me to jump too." },
+    { "n": 45, "name": "Kayaking the Nam Song", "kind": "water", "thrill": 2, "img": "45-02", "quote": "We passed all these bars while kayaking and watched everyone partying hard." },
     { "n": 45, "name": "The big jump at the lagoon", "kind": "high", "thrill": 5, "img": "v45-01", "quote": "Sidd's first jump required 4 attempts, and there's a video of mine requiring \"750 attempts\" 😂" },
     { "n": 46, "name": "Swimming at Kuang Si falls", "kind": "water", "thrill": 1, "img": "46-09", "quote": "The best were the turquoise blue pools that were created for us to swim in!" },
     { "n": 46, "name": "Up Mount Phousi", "kind": "foot", "thrill": 1, "img": "46-11", "quote": "Believed to be the hill Hanuman carried with the Sanjeevani." },
     { "n": 48, "name": "Scooter over the \"treacherous road\" to Pai", "kind": "wheels", "thrill": 3, "img": "48-10", "quote": "All Sidd could talk about was the \"treacherous road\". The weather was fantastic." },
     { "n": 49, "name": "Climbing the Sticky Waterfall", "kind": "high", "thrill": 2, "img": "49-12", "quote": "You climb up the waterfall like you're climbing stairs: 0 slipperiness, max grip." },
     { "n": 49, "name": "Jungle trek in the national park", "kind": "foot", "thrill": 2, "img": "49-11", "quote": "Walking the entire trek alongside an 85 year old uncle from Germany!" },
-    { "n": 49, "name": "Pai to Chiang Mai by scooter (Sidd)", "kind": "wheels", "thrill": 3, "img": null, "quote": "Sidd drove a scooty back and I came in the minivan. From what I hear, his ride was epic." }
+    { "n": 49, "name": "Pai to Chiang Mai by scooter (Sidd)", "kind": "wheels", "thrill": 3, "img": "48-08", "quote": "Sidd drove a scooty back and I came in the minivan. From what I hear, his ride was epic." }
   ]
 }
